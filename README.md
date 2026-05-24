@@ -75,17 +75,31 @@ async with TedSearchClient() as ted:
         ...
 ```
 
-### Use it from Claude (MCP server)
+### Use it as an MCP server
 
-Run it as a subprocess (you don't usually launch it manually -- the MCP host does):
+The server speaks the [Model Context Protocol](https://modelcontextprotocol.io/) over stdio. Any MCP-compatible host -- Claude Desktop, Claude Code, Cursor, Continue.dev, Cline, Zed, or a custom client built on the official Python / TypeScript SDKs -- can spawn it as a subprocess and call the `search_notices` tool.
+
+You don't normally launch the server by hand; the host does. You can sanity-check that it boots with:
 
 ```bash
-uv run ted-search-mcp
+uv run ted-search-mcp        # waits on stdin for MCP JSON-RPC frames; Ctrl-C to exit
 ```
 
-#### Wire into Claude Desktop
+#### What every host needs to know
 
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (replace `/Users/YOU` paths):
+Every MCP host configures servers with the same three pieces of information:
+
+| Field | Value for `ted-search` |
+|---|---|
+| **Server name** | A label you choose, e.g. `ted-search`. |
+| **Command** | The absolute path to your `uv` binary. Run `which uv` to find it -- on macOS it is typically `/Users/YOU/.local/bin/uv`. |
+| **Args** | `["--directory", "/path/to/TED-Search-API", "run", "ted-search-mcp"]` |
+
+> **Why the absolute path to `uv`?** MCP hosts spawn subprocesses with a minimal `PATH` that usually does *not* include `~/.local/bin`. If you write `"command": "uv"` and the host can't resolve it, the server silently fails to launch and the tool simply never appears. Hardcoding the full path eliminates this entire class of bug.
+
+#### Generic JSON config
+
+Most hosts use a JSON config file with this exact shape:
 
 ```json
 {
@@ -103,9 +117,23 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (replac
 }
 ```
 
-Fully quit Claude Desktop (⌘Q) and reopen it. The `search_notices` tool then becomes available in any conversation.
+The shape is identical across hosts; only the *file* you drop it into differs:
 
-#### Wire into Claude Code
+| Host | Config file (or command) |
+|---|---|
+| **Claude Desktop** (macOS) | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| **Claude Desktop** (Windows) | `%APPDATA%\Claude\claude_desktop_config.json` |
+| **Claude Code** | `~/.claude.json` -- or run `claude mcp add` (see below) |
+| **Cursor** | `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (per-project) |
+| **Continue.dev** | `~/.continue/config.json`, under an `mcpServers` key |
+| **Cline** (VS Code extension) | VS Code Settings → search "Cline: MCP" → edit the servers JSON |
+| **Anything else** | Check your host's MCP docs; the JSON shape above is the de facto convention. |
+
+After editing, **fully restart the host application** -- close all windows *and* quit the menu-bar / background process. Closing the window alone is usually not enough.
+
+#### CLI shortcut (Claude Code)
+
+If you have the `claude` CLI installed, skip the JSON edit entirely:
 
 ```bash
 claude mcp add ted-search --scope user -- \
@@ -114,11 +142,39 @@ claude mcp add ted-search --scope user -- \
   run ted-search-mcp
 ```
 
-(The absolute path to `uv` matters -- MCP hosts spawn subprocesses with a minimal `PATH` that may not include `~/.local/bin`.)
+(`--scope user` makes it available across every project. Drop the flag for project-only scope, which writes a local `.mcp.json` instead.) The VS Code Claude Code extension reads the same registry as the CLI.
 
-Then, in a Claude conversation:
+#### From a custom MCP client
+
+`scripts/mcp_smoke.py` in this repo is a ~60-line working example. The core pattern:
+
+```python
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+
+params = StdioServerParameters(
+    command="/Users/YOU/.local/bin/uv",
+    args=["--directory", "/path/to/TED-Search-API", "run", "ted-search-mcp"],
+)
+async with stdio_client(params) as (read, write), ClientSession(read, write) as session:
+    await session.initialize()
+    tools = await session.list_tools()             # → [Tool(name='search_notices', ...)]
+    result = await session.call_tool(
+        "search_notices",
+        arguments={"query": "publication-date >= 20260501", "limit": 5, "scope": "ACTIVE"},
+    )
+    print(result.structuredContent)
+```
+
+#### Verifying it works
+
+Once the host has spawned the server, the `search_notices` tool is available in any conversation. Test it with something like:
 
 > *"Use the ted-search tool to find 5 active French tenders for road resurfacing published since May 1st 2026."*
+
+The tool returns a compact JSON summary: `total_matches`, `returned`, `page`, `next_page`, `has_more`, and a list of notices (each with `id`, `publication_date`, `title`, `buyer_country`, `buyer_name`, `cpv_codes`). The host surfaces it as a tool-call invocation; the assistant interprets the result.
+
+If the tool doesn't appear after a restart, check the host's MCP logs for stderr from the spawn -- almost always either a `PATH`/`command not found` issue (use the absolute path) or a stale config file path.
 
 ---
 
