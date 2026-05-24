@@ -1,0 +1,71 @@
+interactions:
+- request:
+    body: '{"query":"publication-date >= today(-7day)","fields":["notice-identifier","publication-date","title-proc","buyer-name","organisation-country-buyer","classification-cpv"],"page":1,"limit":1,"scope":"ALL","paginationMode":"PAGE_NUMBER","onlyLatestVersions":false,"checkQuerySyntax":false}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '286'
+      Content-Type:
+      - application/json
+      Host:
+      - api.ted.europa.eu
+    method: POST
+    uri: https://api.ted.europa.eu/v3/notices/search
+  response:
+    body:
+      string: '{"message":"Syntax error in expert query at line 1, col 31: extraneous
+        input '')'' expecting {<EOF>, SORT}","error":{"type":"QUERY_SYNTAX_ERROR","location":{"beginColumn":31,"beginLine":1,"endColumn":32,"endLine":1}}}'
+    headers:
+      Cache-Control:
+      - no-cache, no-store, max-age=0, must-revalidate
+      Connection:
+      - keep-alive
+      Content-Security-Policy:
+      - 'default-src ''self'' ted.europa.eu tedweb.api.ted.europa.eu api.ted.europa.eu
+        europa.eu webtools.europa.eu jackson.webtools.europa.eu gisco-services.ec.europa.eu
+        analytics.webanalytics.op.europa.eu dashboard.tech.ec.europa.eu blob: data:
+        ''unsafe-inline'' ''unsafe-eval'''
+      Content-Type:
+      - application/json
+      Date:
+      - Sun, 24 May 2026 16:43:38 GMT
+      Expires:
+      - '0'
+      Pragma:
+      - no-cache
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      - max-age=31536000; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Origin
+      - Access-Control-Request-Method
+      - Access-Control-Request-Headers
+      - Origin
+      - Origin
+      Via:
+      - 1.1 cda53235c44f68a384c77d683d76ef16.cloudfront.net (CloudFront), 1.1 4243bfceae468f4e6fcd6fb1c2394c5a.cloudfront.net
+        (CloudFront)
+      X-Amz-Cf-Id:
+      - wLU-4Ksj7gXp82lmj_oQCVdm7hNytOcQD9YOlmK4l46EIFrOkbW12A==
+      X-Amz-Cf-Pop:
+      - DUB56-P4
+      - DFW57-P3
+      X-Cache:
+      - Error from cloudfront
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - DENY
+      X-XSS-Protection:
+      - '0'
+    status:
+      code: 400
+      message: Bad Request
+version: 1
