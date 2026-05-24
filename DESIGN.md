@@ -239,15 +239,28 @@ We will deliver in three deliberately small slices. Each milestone is independen
 
 **Acceptance:** running the CLI against the live API returns a result. The VCR test passes offline.
 
-### Milestone 2 -- The MCP server
+### Milestone 2 -- The MCP server   **(complete, 2026-05-24)**
 
 **Goal:** Claude Code (or any MCP client) can invoke `search_notices` as a tool.
 
-- `src/ted_search_api/mcp/server.py` -- registers one tool, `search_notices`, that wraps `TedSearchClient.search` and returns a compact JSON summary suitable for an LLM (notice id, title, publication date, buyer country, total count, "more pages available" flag).
-- A `pyproject.toml` script entry: `ted-search-mcp = "ted_search_api.mcp.server:main"`.
-- A small fixture test that boots the server and round-trips one tool call.
+**Delivered:**
+- `src/ted_search_api/mcp/server.py` -- FastMCP server with one tool, `search_notices(query, limit, scope, page)`. Caps `limit` at `MAX_LIMIT=50` (the raw API allows 250 but that floods LLM context). Returns a compact summary: `{total_matches, returned, page, next_page, has_more, notices: [{id, publication_date, title, buyer_country, buyer_name, cpv_codes}, ...]}`. Surfaces `TedAPIError` as `{error, error_type}` rather than crashing the tool call.
+- `pyproject.toml`: `mcp>=1.0` promoted to required deps; `ted-search-mcp = "ted_search_api.mcp.server:main"` console script wired.
+- `tests/test_mcp_server.py` -- 6 unit tests covering `summarise` shape, `has_more` corner cases (including the 15k cap), tool round-trip with monkey-patched client, limit clamping, and API-error path.
+- `scripts/mcp_smoke.py` -- spawns `ted-search-mcp` as a subprocess, runs the MCP initialize handshake, lists tools, calls `search_notices` against the live API. End-to-end-verified 2026-05-24 (52240 active tenders, ROU/FRA/SWE notices).
 
-**Acceptance:** adding the MCP server to a Claude Code MCP config makes `search_notices` available as a tool.
+**Claude Code config snippet (paste into `~/.claude/mcp_servers.json`):**
+
+```json
+{
+  "mcpServers": {
+    "ted-search": {
+      "command": "uv",
+      "args": ["--directory", "/Users/kcharles/ClaudeDev/CC_TED_Search_API", "run", "ted-search-mcp"]
+    }
+  }
+}
+```
 
 ### Milestone 3 (optional) -- The FastAPI HTTP wrapper
 
