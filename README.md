@@ -2,6 +2,18 @@
 
 > Async Python client and MCP server for the EU's [Tenders Electronic Daily](https://ted.europa.eu/) -- the official journal of public procurement in the European Union.
 
+## What is this, in plain English?
+
+> *Skip this section if you already know what an API and an MCP server are. It's here for newcomers.*
+
+**A public API is a way for one piece of software to ask another for information.** The EU runs a website at <https://ted.europa.eu/> where people can search for public tenders. They also expose a programmatic version of that search -- a URL you can send a request to and get back structured data instead of a web page. That URL is the **API**: `https://api.ted.europa.eu/`. It's free, it doesn't require a password, and anyone can use it.
+
+**A client (or "wrapper") is friendly middleware between you and the API.** Calling an API directly is fiddly: you have to format the request perfectly, handle errors, page through long results, and parse the response. A wrapper takes those rough edges off. You say *"find me French tenders for road resurfacing"* in a programming language, and the wrapper handles the awkward parts and gives you a clean answer. The Python part of this project, `TedSearchClient`, is exactly that wrapper.
+
+**MCP (Model Context Protocol) lets AI assistants use wrappers as tools.** AI assistants like Claude can't reach out to the internet on their own -- they need a connector. MCP is an open standard for that connector. Once you tell Claude "this project's MCP server exists," Claude can call its `search_notices` tool inside any conversation -- you ask in English, Claude calls the wrapper, the wrapper calls the EU, and the answer comes back. No coding required on your end.
+
+**Putting it together:** this project is the wrapper *plus* the MCP adapter. Use the Python wrapper directly if you're writing code; use the MCP server if you want Claude (or any MCP-compatible assistant) to use the EU tender data on your behalf. The rest of this README shows how to do each.
+
 TED publishes every public-sector tender in the EU above certain monetary thresholds. The EU exposes a free, keyless HTTP search API. This project wraps that API in two ways:
 
 1. **A reusable async Python client** -- `TedSearchClient` -- that any Python program can import.

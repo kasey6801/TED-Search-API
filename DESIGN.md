@@ -7,6 +7,62 @@
 
 ---
 
+## Preface: what is an MCP wrapper for a public API?
+
+> *Skip this preface if you already know what an API and an MCP server are. It's here so you can read the rest of this document without being lost.*
+
+### 1. APIs, in everyday language
+
+When you visit <https://ted.europa.eu/> in a browser, the EU sends you back a web page -- text, buttons, search forms, pictures of helmets. That's the human face of TED.
+
+For software, the EU also runs a parallel front door: a URL (`https://api.ted.europa.eu/`) you can send a *request* to and get back structured data instead of a web page. That's an **API** -- an *Application Programming Interface*. Same data, machine-readable shape, no pictures.
+
+> **Why does an API exist alongside the website?** Because a person and a program want different things from the same data. A person wants formatted text they can read. A program wants a *predictable* structure so it can pull out exactly the field it needs without guessing. The website and the API are two views of the same underlying database, tuned for two different audiences.
+
+The TED API in particular is **public** (anyone can use it) and **keyless** (no password required) -- which is unusual and lovely. Most public-data APIs from governments and research bodies work the same way.
+
+### 2. Why wrap an API at all?
+
+Talking to an API directly is fiddlier than it looks. You have to:
+
+- Format the request just so (the EU's search has a small custom query language; trip on a comma and the whole thing fails);
+- Handle errors that come in five different shapes;
+- Page through long results (the API returns 50 at a time; you might want 5000);
+- Parse the response (it comes back as JSON, a text format your program has to interpret);
+- Tolerate the API changing over time without your program silently breaking.
+
+A **wrapper** (also called a *client library*) is a layer of friendly Python code that does all those things for you. Instead of writing the awkward request yourself, you call a function: `client.search("road resurfacing in France")`. The wrapper handles paging, errors, parsing, the lot. You get a clean Python object back.
+
+> **Why?** The same logic gets reused everywhere a program wants TED data -- a CLI script, an MCP server, a web dashboard, a Jupyter notebook. Without the wrapper, every one of those callers reimplements paging, error handling, and JSON parsing. With it, the awkward parts live in one place; everything else stays simple. The "shared client" is the most important architectural decision in this project -- everything else is a thin layer on top.
+
+The Python part of this project, `TedSearchClient` in `src/ted_search_api/client.py`, is exactly that wrapper.
+
+### 3. MCP, in everyday language
+
+AI assistants like Claude are very good at language, but they can't reach out to the internet on their own. Out of the box, Claude can't search TED any more than a brilliant friend over the phone can read your physical bookshelf -- they need a connector.
+
+**MCP** -- the *Model Context Protocol* -- is an open standard for that connector. An MCP **server** is a small program that registers one or more **tools** with an AI assistant. Once the assistant knows the tool exists, the AI can call it inside any conversation, the same way you might ask a colleague "can you check X for me?".
+
+A concrete example: this project ships an MCP server called `ted-search-mcp` that registers one tool, `search_notices`. After you install it once (see the README's "Use it as an MCP server" section), you can ask Claude in plain English -- *"find me 5 active French tenders for road resurfacing"* -- and Claude:
+
+1. Recognises that the `search_notices` tool can help;
+2. Translates your English into a TED query;
+3. Calls our MCP server;
+4. The server calls our Python wrapper;
+5. The wrapper calls the EU's API;
+6. Results flow back up the chain;
+7. Claude reads them and writes you an answer.
+
+The whole loop is invisible to you. From your seat, you asked a question and got an answer; under the hood, four layers of software collaborated. That is the point.
+
+> **Why MCP rather than some custom adapter?** Because every major AI assistant -- Claude Desktop, Claude Code, Cursor, Continue.dev, Cline, Zed, and others -- speaks MCP. Build one MCP server and it works in all of them. Build a custom adapter for one of those products and you've locked your work to that product forever.
+
+### 4. Putting it together: what this document is about
+
+`TED-Search-API` is the wrapper (§2) plus the MCP adapter (§3) for the EU tender API (§1). The rest of this document explains *how* we built it and *why* we made each decision the way we did. If you're new to all of this, the "Why?" callouts throughout are written for you.
+
+---
+
 ## 1. What we are building, in one paragraph
 
 The European Union publishes every public-sector tender (above certain monetary thresholds) in a daily journal called **TED** -- *Tenders Electronic Daily*. There is an official, free, public HTTP API for searching it. Our project, `TED-Search-API`, wraps that API in two thin layers:
