@@ -1,0 +1,126 @@
+{
+  "155cf19c-7072-4d3b-aca9-bf026927d6bd": {
+    "buyer-name": {
+      "por": [
+        "Agrupamento de Escolas de Santo André, Barreiro"
+      ]
+    },
+    "classification-cpv": [
+      "39150000",
+      "39150000",
+      "39150000"
+    ],
+    "notice-identifier": "155cf19c-7072-4d3b-aca9-bf026927d6bd",
+    "organisation-country-buyer": [
+      "PRT"
+    ],
+    "publication-date": "2025-06-02+02:00",
+    "title-proc": {
+      "por": "CPI02/AESA/2025"
+    },
+    "total-value": 1145376.13,
+    "total-value-cur": [
+      "EUR"
+    ]
+  },
+  "222ef230-2087-439a-bde9-e49a344f5caa": {
+    "buyer-name": {
+      "ces": [
+        "Český atletický svaz"
+      ]
+    },
+    "classification-cpv": [
+      "92000000",
+      "92600000",
+      "92622000",
+      "92000000",
+      "92000000",
+      "92600000",
+      "92622000",
+      "92600000",
+      "92622000"
+    ],
+    "notice-identifier": "222ef230-2087-439a-bde9-e49a344f5caa",
+    "organisation-country-buyer": [
+      "CZE"
+    ],
+    "publication-date": "2025-06-02+02:00",
+    "title-proc": {
+      "ces": "ZAJIŠTĚNÍ MĚŘENÍ ATLETICKÝCH ZÁVODŮ"
+    },
+    "total-value": 19200000,
+    "total-value-cur": [
+      "CZK"
+    ]
+  },
+  "3051adeb-2c7a-4bf6-83ae-eae8e68e57b3": {
+    "buyer-name": {
+      "swe": [
+        "Trafikverket Myndighet"
+      ]
+    },
+    "classification-cpv": [
+      "71310000",
+      "71310000"
+    ],
+    "notice-identifier": "3051adeb-2c7a-4bf6-83ae-eae8e68e57b3",
+    "organisation-country-buyer": [
+      "SWE"
+    ],
+    "publication-date": "2025-06-02+02:00",
+    "title-proc": {
+      "swe": "GC-bana utmed väg 544, Vännäsby"
+    },
+    "total-value": 2000000,
+    "total-value-cur": [
+      "SEK"
+    ]
+  },
+  "626a9d96-2765-4a16-9c9a-319124a3e3d5": {
+    "buyer-name": {
+      "spa": [
+        "Intendente de San Fernando"
+      ]
+    },
+    "classification-cpv": [
+      "50241000",
+      "50241000",
+      "50241000"
+    ],
+    "notice-identifier": "626a9d96-2765-4a16-9c9a-319124a3e3d5",
+    "organisation-country-buyer": [
+      "ESP"
+    ],
+    "publication-date": "2025-06-02+02:00",
+    "title-proc": {
+      "spa": "Acuerdo Marco: Servicio de mantenimiento y reparación de sistemas electrónicos y comunicaciones, equipos de ayuda a la navegación y vigilancia de buques."
+    },
+    "total-value": 500000,
+    "total-value-cur": [
+      "EUR"
+    ]
+  },
+  "f0ab116d-bc6e-4815-b3bf-5b467488d13b": {
+    "buyer-name": {
+      "ron": [
+        "Universitatea de Medicina si Farmacie \"Iuliu Hatieganu\" Cluj-Napoca"
+      ]
+    },
+    "classification-cpv": [
+      "34152000",
+      "34152000"
+    ],
+    "notice-identifier": "f0ab116d-bc6e-4815-b3bf-5b467488d13b",
+    "organisation-country-buyer": [
+      "ROU"
+    ],
+    "publication-date": "2025-06-02+02:00",
+    "title-proc": {
+      "ron": "Sistem de anatomie virtuală"
+    },
+    "total-value": 900000,
+    "total-value-cur": [
+      "RON"
+    ]
+  }
+}

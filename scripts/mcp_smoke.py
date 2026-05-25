@@ -45,9 +45,20 @@ async def main() -> int:
 
         total = payload.get("total_matches")
         returned = payload.get("returned")
-        print(f"[smoke] total_matches={total} returned={returned}")
+        warnings = payload.get("validation_warnings")
+        print(
+            f"[smoke] total_matches={total} returned={returned} "
+            f"validation_warnings={warnings}"
+        )
         if not isinstance(total, int) or returned != 3:
             print("[smoke] FAIL: unexpected response shape", file=sys.stderr)
+            return 1
+        if warnings != 0:
+            print(
+                f"[smoke] FAIL: validation_warnings={warnings} -- live notices "
+                "are failing strict validation; investigate drift",
+                file=sys.stderr,
+            )
             return 1
 
         first = payload["notices"][0]

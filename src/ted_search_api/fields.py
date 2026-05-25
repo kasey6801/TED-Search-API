@@ -25,10 +25,15 @@ PRESET_BUYER_AND_VALUE: list[str] = [
     "notice-identifier",
     "publication-date",
     "title-proc",
-    "organisation-name-buyer",
+    "buyer-name",
     "organisation-country-buyer",
     "classification-cpv",
-    "notice-value-cur",
-    "notice-value",
+    "total-value",
+    "total-value-cur",
 ]
-"""Summary + the headline contract value (when present)."""
+"""Summary + the headline contract value (when present).
+
+`total-value` / `total-value-cur` are the eForms field IDs for the
+overall contract total. Other value-related fields (`tender-value`,
+`estimated-value-*`, `framework-*-value-*`) exist but cover different
+semantics -- see the OpenAPI spec for the full ~50-field value family."""

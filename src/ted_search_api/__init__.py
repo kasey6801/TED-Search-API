@@ -13,14 +13,17 @@ from ted_search_api.errors import (
 )
 from ted_search_api.fields import PRESET_SUMMARY
 from ted_search_api.models import (
+    NoticeSummary,
     PaginationMode,
     Scope,
     SearchRequest,
     SearchResponse,
+    parse_notice_summary,
 )
 
 __all__ = [
     "PRESET_SUMMARY",
+    "NoticeSummary",
     "PaginationMode",
     "Scope",
     "SearchRequest",
@@ -29,6 +32,7 @@ __all__ = [
     "TedHTTPError",
     "TedQueryError",
     "TedSearchClient",
+    "parse_notice_summary",
 ]
 
 __version__ = "0.0.1"

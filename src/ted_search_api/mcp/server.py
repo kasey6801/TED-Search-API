@@ -32,7 +32,7 @@ from mcp.server.fastmcp import FastMCP
 from ted_search_api.client import TedSearchClient
 from ted_search_api.errors import TedAPIError
 from ted_search_api.fields import PRESET_SUMMARY
-from ted_search_api.models import SearchResponse
+from ted_search_api.models import SearchResponse, parse_notice_summary
 
 mcp = FastMCP("ted-search")
 
@@ -77,11 +77,14 @@ async def search_notices(
     -------
     dict
         {
-          "total_matches": int,       # total matches for the query
-          "returned":      int,       # how many notices in this response
-          "page":          int,       # the page we returned
+          "total_matches": int,        # total matches for the query
+          "returned":      int,        # how many notices in this response
+          "page":          int,        # the page we returned
           "next_page":     int | None,
           "has_more":      bool,
+          "validation_warnings": int,  # >0 means some notices failed strict
+                                       # schema validation; treat results as
+                                       # tentative and flag for human review
           "notices": [
             {
               "id":             str,
@@ -117,7 +120,18 @@ async def search_notices(
 def summarise(
     result: SearchResponse, *, page: int, limit: int
 ) -> dict[str, Any]:
-    """Reduce a `SearchResponse` to the compact LLM-friendly shape."""
+    """Reduce a `SearchResponse` to the compact LLM-friendly shape.
+
+    Every notice is validated through `NoticeSummary` (strict types on
+    known fields). Notices that fail validation are still included in
+    the output (compaction tolerates missing fields), but the response
+    includes a `validation_warnings` counter so callers (LLMs) know to
+    flag results for human review rather than treating them as
+    authoritative.
+    """
+    validation_warnings = sum(
+        1 for n in result.notices if parse_notice_summary(n) is None
+    )
     notices = [_compact(n) for n in result.notices]
     consumed = page * limit
     has_more = consumed < result.totalNoticeCount and consumed < 15000
@@ -127,6 +141,7 @@ def summarise(
         "page": page,
         "next_page": page + 1 if has_more else None,
         "has_more": has_more,
+        "validation_warnings": validation_warnings,
         "notices": notices,
     }
 

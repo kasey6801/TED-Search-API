@@ -279,10 +279,13 @@ We will only build M3 if there is a real consumer. It is genuinely optional.
 | Risk | Mitigation |
 |---|---|
 | Undocumented rate limits could surprise us at scale. | Polite defaults (1-2 concurrent requests, exponential backoff). Discover limits empirically and document. |
-| Field IDs evolve when EU publishes new eForms versions. | Keep `fields` typed as `list[str]`, not a closed enum. Bubble up `QueryUnknownFieldError` from the server. |
+| **Schema drift**: EU adds / removes / renames fields when new eForms versions ship. | `scripts/spec_diff.py` diffs the live OpenAPI spec against `tests/fixtures/ted_openapi_v3.snapshot.json`. Exit-code-aware -- safe to wire to cron / GH Actions. |
+| **Semantic drift**: a field's *meaning* changes without the schema changing (e.g. unit shift on `total-value`, CPV taxonomy bump). Schema diff misses this entirely. | `scripts/canary.py` asserts 5 frozen historical notices (June 2025, country-diverse, finalised contracts) still match byte-for-byte. Any single mismatch is a high-confidence drift signal. |
+| Downstream consumers act on malformed notices because the response shape looked right. | `NoticeSummary` Pydantic model (strict types / regex on every consumed field; `extra="ignore"` for additions). `summarise()` surfaces `validation_warnings` count in the MCP response so the LLM flags rather than trusts. |
 | The expert-search query DSL is non-trivial; users will mis-type. | Consider a `validate_query(query: str) -> ValidationResult` helper that calls the API with `checkQuerySyntax=true`. |
 | Iteration tokens can expire. | Document the failure mode; provide a helper that restarts ITERATION if the token expires mid-iteration. |
-| LLM clients may request enormous result sets via the MCP tool. | Cap `limit` server-side in the MCP wrapper (e.g. max 50 per call) and require explicit "next page" requests. |
+| LLM clients may request enormous result sets via the MCP tool. | Cap `limit` server-side in the MCP wrapper (max 50 per call) and require explicit "next page" requests. |
+| Server silently drops field names that don't apply to a given notice or notice-type (e.g. `notice-identifier` is empty for pre-eForms notices). | Discovered empirically; documented in § 2.5. Canary fixtures intentionally chosen from post-eForms (2025+) data to avoid false positives. |
 
 ---
 

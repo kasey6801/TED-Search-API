@@ -235,6 +235,20 @@ uv run python scripts/mcp_smoke.py      # MCP stdio round-trip against the live 
 
 ---
 
+## Operational guardrails
+
+The TED API is publicly maintained and can change between releases. Three guardrails ship with the project so drift surfaces loudly instead of poisoning downstream results silently.
+
+```bash
+uv run python scripts/spec_diff.py        # diff live OpenAPI spec vs pinned snapshot
+uv run python scripts/spec_diff.py --update   # re-pin after reviewing a benign diff
+uv run python scripts/canary.py -v         # assert 5 frozen historical notices still match
+```
+
+In addition, every notice flowing through the MCP `search_notices` tool is run through a strict `NoticeSummary` Pydantic model (`src/ted_search_api/models.py`). Unknown upstream fields are tolerated silently, but malformed values on known fields are surfaced via the response's `validation_warnings` counter. A non-zero count is the assistant's cue to flag results for human review rather than treat them as authoritative.
+
+Run any of the three scripts manually, on a cron, or as a GitHub Action -- they each exit non-zero on drift, so wiring them into a scheduler is one line.
+
 ## Limitations and roadmap
 
 - **No automatic retries** on 429 / 5xx -- failures surface as `TedHTTPError`. The TED API does not document rate limits; client-side backoff is left to the caller.

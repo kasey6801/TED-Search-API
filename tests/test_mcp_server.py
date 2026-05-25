@@ -45,6 +45,7 @@ def test_summarise_compacts_a_notice() -> None:
     assert summary["page"] == 1
     assert summary["has_more"] is False
     assert summary["next_page"] is None
+    assert summary["validation_warnings"] == 0
 
     n = summary["notices"][0]
     assert n["id"] == "abc-123"
@@ -53,6 +54,20 @@ def test_summarise_compacts_a_notice() -> None:
     assert n["buyer_country"] == "FRA"
     assert n["buyer_name"] == "Ville de Paris"
     assert n["cpv_codes"] == ["18443320"]  # de-duplicated
+
+
+def test_summarise_counts_validation_warnings_on_malformed_notice() -> None:
+    """A notice with a broken `publication-date` should still appear in
+    the compact output (so callers see *something*), but contribute one
+    to the `validation_warnings` counter so the LLM knows to flag."""
+    broken = {**SAMPLE_NOTICE, "publication-date": "not-a-date"}
+    summary = srv.summarise(
+        _fake_response(total=2, notices=[SAMPLE_NOTICE, broken]),
+        page=1,
+        limit=10,
+    )
+    assert summary["validation_warnings"] == 1
+    assert summary["returned"] == 2  # both still surfaced
 
 
 def test_summarise_signals_has_more_when_total_exceeds_consumed() -> None:
