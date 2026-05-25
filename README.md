@@ -211,6 +211,39 @@ See the [TED expert-search reference](https://ted.europa.eu/en/search/expert-sea
 
 ---
 
+## Data source: TED and the eForms transition
+
+Every result this client returns comes directly from [Tenders Electronic Daily](https://ted.europa.eu/), the EU's official journal of public procurement notices. Member states upload notices to a common schema and TED re-publishes them daily. The corpus is large -- over **50 000 active notices** at any one time and tens of millions historically -- and goes back decades.
+
+**The data has two eras.** In October 2023 the EU migrated to **eForms**, a much richer structured schema, and made it mandatory for new publications. The TED API exposes both eras through the same endpoint, but the *structural* fields differ sharply between them.
+
+Empirical population rates from random 100-notice samples (taken 2026-05-25):
+
+| Field | Pre-2024 (legacy schema) | 2024 onwards (eForms) |
+|---|---:|---:|
+| `publication-date` | 100 % | 100 % |
+| `buyer-name` *(multilingual)* | 100 % | 100 % |
+| `classification-cpv` | 100 % | 100 % |
+| `notice-identifier` *(UUID)* | **0 %** | 100 % |
+| `title-proc` *(multilingual)* | **0 %** | 100 % |
+| `organisation-country-buyer` | **0 %** | 100 % |
+| `total-value` | ~68 % (90 % on `can-standard` awards) | ~57 % |
+| `total-value-cur` *(currency code)* | ~70 % | ~61 % |
+
+**Practical consequences for your queries:**
+
+- **Filter or sort on the missing-in-legacy fields** -- `notice-identifier`, `title-proc`, `organisation-country-buyer` -- and you will silently exclude pre-2024 notices. The API does *not* warn about this.
+- **Span both eras** and ~half your records will lack core structured fields. The MCP `search_notices` tool reports a `validation_warnings` count for exactly this case; treat any non-zero value as a cue to narrow the date range or relax the downstream logic.
+- **Value fields populate inconsistently** even in the eForms era. Roughly 60 % of recent notices carry a `total-value`; the rest are framework agreements, ongoing competitions, or notice types where the field doesn't apply. Don't assume it's present.
+
+**Recommended date floor for analysis:** `publication-date >= 20240101`. Below that the field-population gap is severe enough that aggregate statistics over a mixed sample will be biased toward whichever era happens to dominate.
+
+If you specifically need historical (pre-2024) data, the EU also publishes the **TED bulk XML daily packages** through the EU Open Data Portal -- they carry the full original notice text under the legacy schema. Cross-referencing between the two sources is left to the caller; this client wraps only the REST search endpoint.
+
+The drift-detection scripts (`scripts/spec_diff.py`, `scripts/canary.py`) and the strict `NoticeSummary` validation in `summarise()` are all designed against this two-era reality. See [`DESIGN.md` § 6](DESIGN.md) for the full risk inventory.
+
+---
+
 ## Project structure
 
 ```
